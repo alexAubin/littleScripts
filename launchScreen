@@ -1,0 +1,10 @@
+#!/bin/bash
+
+WORKING_DIR=$PWD
+SESSION_NAME=$1
+shift
+COMMAND=$@
+
+screen -d -m -S $SESSION_NAME
+screen -S $SESSION_NAME -p 0 -X stuff "cd ${WORKING_DIR}"`echo -ne '\015'`
+screen -S $SESSION_NAME -p 0 -X stuff "${COMMAND}"`echo -ne '\015'`
