@@ -1,0 +1,34 @@
+#!/bin/bash
+
+DIRORIGIN="$PWD"
+
+DIR1="$PWD/git"
+DIR2="$PWD/cvs"
+
+cd $DIR1;
+for i in `ls -ltRh | awk '{print $9}'` ; do
+	
+    # Check filename isn't empty
+	if [ "$i" != "" ] ; then
+
+        # Check if extension correspond to C/C++ source files
+		extension=`echo $i | awk -F '.' '{print $2}'`
+		if [ "$extension" = "h" -o "$extension" = "C" -o "$extension" = "cc" -o "$extension" = "sh" ] ; then
+
+            # Compute diff
+			file=`find -name ''$i''`
+			diff $DIR1/$file $DIR2/$file > tmp
+			difflines=`cat tmp | wc -l`
+			filename=`echo $file | sed 's|\.\/|\/|g'`	
+			
+			if [ "$difflines" -gt "0" ] ; then
+				echo "Difference found in " $file 
+                mv tmp ${DIRORIGIN}/${i}.diff
+            else
+                rm tmp
+			fi
+ 
+		fi
+	fi
+
+done
