@@ -1,0 +1,88 @@
+#!/bin/bash
+
+LOCAL_PWD=$PWD
+
+PROD=July13-v1
+CRAB_HOME=/dpm/in2p3.fr/home/cms/phedex/store/user/aaubin/$PROD
+TAG=$1
+
+mkdir -p $TAG
+
+rm -f $TAG/toBeHarvested.list
+
+rfdir $CRAB_HOME/$TAG/ | grep NTuple > $TAG/rawDump
+RAWLIST=`cat $TAG/rawDump | awk '{ print $9 }'`
+
+for NTUPLE in $RAWLIST
+do
+    JOBNUMBER=`echo $NTUPLE | sed 's|_| |g' | awk '{print $2}'`
+       
+    # Check file doesn't exist yet (and if it does, check the size is okay)
+    CHECK_SYNC=false
+    if [[ -f $TAG/$NTUPLE ]]
+    then
+        SIZE_NTUPLE_ON_CRAB=`cat $TAG/rawDump | grep $NTUPLE | awk '{ print $5 }'`
+        SIZE_NTUPLE_LOCAL=`ls -l $TAG/$NTUPLE | awk '{print $5}'`
+        if [[ $SIZE_NTUPLE_ON_CRAB != $SIZE_NTUPLE_LOCAL ]]
+        then
+            CHECK_SYNC=false
+        else
+            CHECK_SYNC=true
+        fi
+    else
+        CHECK_SYNC=true
+    fi
+
+    OCCURENCES=`cat $TAG/rawDump | awk '{print $9}' | grep NTuple_${JOBNUMBER}_`
+    NOCCURENCES=`echo $OCCURENCES | wc -w`
+    CHECK_DUPLIC=true
+
+    if [[ $NOCCURENCES -ge 2 ]]
+    then
+
+        # Find most recent occurence
+        OCC_MOSTRECENT=""
+        DATEINSEC_MOSTRECENT=0
+        for OCC in $OCCURENCES
+        do
+            DATE=`cat $TAG/rawDump | grep $OCC | awk '{print $6 " " $7 " " $8}'`
+            DATEINSEC=`date -d "$DATE" +'%s'`
+            if [[ $DATEINSEC -gt $DATEINSEC_MOSTRECENT ]]
+            then
+                OCC_MOSTRECENT=$OCC
+                DATEINSEC_MOSTRECENT=$DATEINSEC
+            fi
+        done
+        
+        # Compare current occurence to most recent one
+        if [[ $NTUPLE == $OCC_MOSTRECENT ]]
+        then
+            CHECK_DUPLIC=true
+        else
+            CHECK_DUPLIC=false
+        fi
+    
+    fi
+
+    if [[ $CHECK_SYNC == true  ]]
+    then
+    if [[ $CHECK_DUPLIC == true  ]]
+    then
+        echo $NTUPLE >> $TAG/toBeHarvested.list
+    fi
+    fi
+
+  #  rfcp $CRAB_PWD/$TAG/$SUBFOLD/$NTUPLE $LOCAL_PWD/$TAG/
+
+done
+    
+rm -f $TAG/rawDump
+rm -f $TAG/log
+
+for NTUPLE in `cat $TAG/toBeHarvested.list`
+do
+    echo "$TAG :: Copying $NTUPLE ... " >> $TAG/log
+    rfcp $CRAB_HOME/$TAG/$NTUPLE ./$TAG/
+done
+
+
