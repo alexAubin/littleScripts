@@ -24,3 +24,12 @@ Description : Compare the source files of two folders recursively
 
 Usage : edit DIR1 and DIR2 in scripts, run ./diffFolder and read the .diff files.
 
+harvestProdOnDPM
+----------
+
+Description : Harvest NTuples from DPM after Crab production, (except duplicate output if there are some)
+
+Usage : edit PROD in the script, then do ./harvestProdOnDPM [sampleName]
+
+
+
