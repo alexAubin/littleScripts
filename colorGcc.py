@@ -119,9 +119,7 @@ def print_message(
         filename = os.path.basename(fpath[1])
         dirname = os.path.dirname(fpath[1])
         if dirname != '':
-            dirname.replace('storage1','opt/sbg/data/data1')
             dirname = os.path.relpath(dirname)
-
 
         print ansiformat(status[0],status[1].upper()), 
         if dirname != '':
@@ -210,8 +208,9 @@ Main CLI handler.
     note1_present = False
     makeerrors_present = False
 
-    output_lines = sys.stdin.read().split("\n")
-    for line in output_lines:
+#    output_lines = sys.stdin.read().split("\n")
+    #for line in output_lines:
+    for line in sys.stdin:
         err_match = err_pattern.match(line)
         warn_match = warn_pattern.match(line)
         note1_match = note1_pattern.match(line)
