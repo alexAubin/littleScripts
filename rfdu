@@ -1,0 +1,64 @@
+#!/bin/bash
+
+LOCAL_PWD=$PWD
+
+CRAB_HOME=/dpm/in2p3.fr/home/cms/phedex/store/user/aaubin/
+CRAB_FOLDER=.
+CRAB_PWD=$CRAB_HOME/$CRAB_FOLDER
+
+DATASETLIST="TTJets_SemiLeptMGDecays_8TeV-madgraph
+TTJets_HadronicMGDecays_8TeV-madgraph
+TTJets_FullLeptMGDecays_8TeV-madgraph
+W2JetsToLNu_TuneZ2Star_8TeV-madgraph
+W3JetsToLNu_TuneZ2Star_8TeV-madgraph
+W4JetsToLNu_TuneZ2Star_8TeV-madgraph
+T_s-channel_TuneZ2star_8TeV-powheg-tauola 
+T_t-channel_TuneZ2star_8TeV-powheg-tauola 
+T_tW-channel-DR_TuneZ2star_8TeV-powheg-tauola 
+Tbar_s-channel_TuneZ2star_8TeV-powheg-tauola 
+Tbar_t-channel_TuneZ2star_8TeV-powheg-tauola 
+Tbar_tW-channel-DR_TuneZ2star_8TeV-powheg-tauola
+DY4JetsToLL_M-50_TuneZ2Star_8TeV-madgraph
+DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball
+TBZToLL_4F_TuneZ2star_8TeV-madgraph-tauola 
+TTGJets_8TeV-madgraph TTWJets_8TeV-madgraph 
+TTWWJets_8TeV-madgraph TTZJets_8TeV-madgraph_v2  
+WGstarToLNu2E_TuneZ2star_8TeV-madgraph-tauola 
+WGstarToLNu2Mu_TuneZ2star_7TeV-madgraph-tauola 
+WGstarToLNu2Tau_TuneZ2star_7TeV-madgraph-tauola 
+WWGJets_8TeV-madgraph 
+WWJetsTo2L2Nu_TuneZ2star_8TeV-madgraph-tauola 
+WWWJets_8TeV-madgraph 
+WWZNoGstarJets_8TeV-madgraph 
+WZJetsTo2L2Q_TuneZ2star_8TeV-madgraph-tauola 
+WZJetsTo3LNu_TuneZ2_8TeV-madgraph-tauola 
+WZZNoGstarJets_8TeV-madgraph 
+ZZJetsTo2L2Nu_TuneZ2star_8TeV-madgraph-tauola 
+ZZJetsTo2L2Q_TuneZ2star_8TeV-madgraph-tauola 
+ZZJetsTo4L_TuneZ2star_8TeV-madgraph-tauola 
+ZZZNoGstarJets_8TeV-madgraph"
+
+SIZETOT="0"
+
+for DATASET in $DATASETLIST
+do
+	
+    SUBFOLD1=`rfdir $CRAB_PWD/$DATASET/ | grep "Beta" | awk '{print $9}'`
+    SUBFOLD2=`rfdir $CRAB_PWD/$DATASET/$SUBFOLD1 | awk '{print $9}' | head -n1`
+   
+    TAG=`echo $SUBFOLD1 | sed "s|tauVetoValidationBeta_||g"`
+    
+    SIZE=`rfdir $CRAB_HOME/$DATASET/$SUBFOLD1/$SUBFOLD2 | awk '{print $5}'  | tr '\n' '+' | sed 's|+$|\n|g' | bc | sed 's|^|0.000000000000954*|g' | bc | cut -c1-5`
+
+    if [[ $SIZE != "" ]] 
+    then 
+        SIZETOT=`echo $SIZETOT+$SIZE | bc` 
+    fi
+
+    echo "$DATASET | $SIZE TiB"
+
+done
+
+echo ""
+echo "Total | $SIZETOT TiB"
+

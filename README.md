@@ -31,5 +31,11 @@ Description : Harvest NTuples from DPM after Crab production, (except duplicate 
 
 Usage : edit PROD in the script, then do ./harvestProdOnDPM [sampleName]
 
+multiStatus, multiResubmit
+----------
+
+Description : Crab monitoring / resubimitting tools for large production. This create a status.tmp in the task folder.
+
+Usage : edit the list TASKS inside multiStatus and multiResubmit, then use ./multiStatus -U do check the status of all the tasks, then use ./multiResubmit to resubmit all the job with errors/crash.
 
 
