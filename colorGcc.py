@@ -18,7 +18,12 @@
 ## with this program. If not, see <http://www.gnu.org/licenses/>.
 ##
 ###############################################################################
- 
+## 
+##  Edited by Alexandre A., https://github.com/alexAubin
+##
+###############################################################################
+
+
 """
 This program does something.
 """
@@ -31,7 +36,7 @@ import argparse
 __prog__ = os.path.basename(__file__)
 __version__ = "1.0.0"
 __description__ = __doc__
-__author__ = 'Jeet Sukumaran'
+__author__ = 'Jeet Sukumaran (edited by Alexandre Aubin)'
 __copyright__ = 'Copyright (C) 2012 Jeet Sukumaran.'
  
 ##############################################################################
@@ -46,6 +51,12 @@ __copyright__ = 'Copyright (C) 2012 Jeet Sukumaran.'
 ## :license: BSD, see LICENSE for details.
 ##
 
+
+
+######################################
+# Define colors and style characters #
+######################################
+
 esc = "\x1b["
  
 codes = {}
@@ -59,10 +70,8 @@ codes["underline"] = esc + "04m"
 codes["blink"] = esc + "05m"
 codes["overline"] = esc + "06m"
  
-dark_colors = ["black", "darkred", "darkgreen", "brown", "darkblue",
-                "purple", "teal", "lightgray"]
-light_colors = ["darkgray", "red", "green", "yellow", "blue",
-                "fuchsia", "turquoise", "white"]
+dark_colors = ["black", "darkred", "darkgreen", "brown", "darkblue", "purple", "teal", "lightgray"]
+light_colors = ["darkgray", "red", "green", "yellow", "blue", "fuchsia", "turquoise", "white"]
  
 x = 30
 for d, l in zip(dark_colors, light_colors):
@@ -76,14 +85,11 @@ codes["darkteal"] = codes["turquoise"]
 codes["darkyellow"] = codes["brown"]
 codes["fuscia"] = codes["fuchsia"]
 # codes["white"] = codes["bold"]
- 
-def reset_color():
-    return codes["reset"]
- 
-def colorize(color_key, text):
-    return codes[color_key] + text + codes["reset"]
- 
- 
+
+###############################
+# Functions to print messages #
+###############################
+
 def ansiformat(attr, text):
     """
 Format ``text`` with a color and/or some attributes::
@@ -106,43 +112,59 @@ _color_ underlined color
     result.append(text)
     result.append(codes['reset'])
     return ''.join(result)
-##
-##############################################################################
- 
+
 def print_message(
         status,
-        fpath,
-        lnum,
-        msg,
-        colorize=True):
-    if colorize:
-        filename = os.path.basename(fpath[1])
-        dirname = os.path.dirname(fpath[1])
-        if dirname != '':
-            dirname = os.path.relpath(dirname)
+        filePath,
+        lineNumber,
+        msg):
+    filename = os.path.basename(filePath[1])
+    dirname = os.path.dirname(filePath[1])
+    if dirname != '':
+        dirname = os.path.relpath(dirname)
 
-        print ansiformat(status[0],status[1].upper()), 
-        if dirname != '':
-            print ansiformat(fpath[0], dirname + os.path.sep), 
-        print ansiformat("_"+fpath[0]+"_", filename), ":", 
-        print ansiformat(msg[0], msg[1])
-
-#		sys.stdout.write("{}: {}{} +{}: {}\n".format(
-#           ansiformat(status[0], status[1].upper()),
-#           ansiformat(fpath[0], dirname + os.path.sep),
-#           ansiformat("_"+fpath[0]+"_", filename),
-#           ansiformat(lnum[0], lnum[1]),
-#           ansiformat(msg[0], msg[1]),
-#           ))
-    else:
-		print status[1].upper(), ": ", fpath[1], ": ", msg[1]
-#        sys.stdout.write("{}: {} +{}: {}\n".format(
-#           status[1].upper(),
-#           fpath[1],
-#           lnum[1],
-#           msg[1]
-#			))
+    print ansiformat(status[0],status[1].upper()), 
+    if dirname != '':
+        print ansiformat(filePath[0], dirname + os.path.sep), 
+    print ansiformat("_"+filePath[0]+"_", filename), ":", 
+    print ansiformat(msg[0], msg[1])
  
+
+##################
+# Define regexes #
+##################
+
+# Errors
+error_pattern   = re.compile(r"(.+?):([0-9]+?): error: (.+)")
+# Warnings
+warning_pattern = re.compile(r"(.+?):([0-9]+?): warning: (.+)")
+# Notes
+note_pattern    = re.compile(r"(.+?): In member function '(.+?)\((.+?)\)':")
+
+# Message colors configuration
+
+lineNumber_color = "*green*"
+message_color    = "lightgray"
+
+error_filePath_color = "yellow"
+error_status_color   = "red"
+
+warning_filePath_color = "blue"
+warning_status_color   = "fuchsia"
+
+note_filePath_color  = "blue"
+note_status_color    = "yellow"
+
+others_message_color = "darkgray"
+
+finalMessage_fail_color    = "red"
+finalMessage_warning_color = "yellow"
+finalMessage_success_color = "green"
+
+##################
+# Main functions #
+##################
+
 def main():
     """
 Main CLI handler.
@@ -155,115 +177,58 @@ Main CLI handler.
             default=False,
             help="show non-error and non-warning messages as well")
  
-    parser.add_argument("--hide-errors",
-            action="store_true",
-            default=False,
-            help="hide error messages (why would you want to do this?)")
- 
-    parser.add_argument("--hide-warnings",
-            action="store_true",
-            default=False,
-            help="hide warning messages")
- 
-    parser.add_argument("--no-color",
-            action="store_true",
-            default=False,
-            help="do not colorize")
- 
     args = parser.parse_args()
  
-    lnum_color = "*green*"
-    msg_color = "lightgray"
- 
-    # Errors
-    err_pattern = re.compile(r"(.+?):([0-9]+?): error: (.+)")
-    err_fpath_color = "yellow"
-    err_lnum_color = lnum_color
-    err_status_color = "red"
-    err_msg_color = msg_color
-
-    # Warnings
-    warn_pattern = re.compile(r"(.+?):([0-9]+?): warning: (.+)")
-    warn_fpath_color = "blue"
-    warn_lnum_color = lnum_color
-    warn_status_color = "fuchsia"
-    warn_msg_color = msg_color
-
-    # Note 1
-    note1_pattern = re.compile(r"(.+?): In member function '(.+?)\((.+?)\)':")
-    note1_fpath_color = "blue"
-    note1_lnum_color = lnum_color
-    note1_status_color = "yellow"
-    note1_msg_color = "white"
-
-    # Make errors 
-    makeerr_pattern = re.compile(r"gmake: \*\*\* \[(.+?)\] Error 1")
-    makeerr_fpath_color = "yellow"
-    makeerr_lnum_color = lnum_color
-    makeerr_status_color = "red"
-    makeerr_msg_color = msg_color
-
     errors_present = False
     warnings_present = False
-    note1_present = False
-    makeerrors_present = False
 
-#    output_lines = sys.stdin.read().split("\n")
-    #for line in output_lines:
     for line in sys.stdin:
-        err_match = err_pattern.match(line)
-        warn_match = warn_pattern.match(line)
-        note1_match = note1_pattern.match(line)
-        makeerr_match = makeerr_pattern.match(line)
-        if err_match and not args.hide_errors:
+        error_match = error_pattern.match(line)
+        warning_match = warning_pattern.match(line)
+        note_match = note_pattern.match(line)
+        if error_match:
             errors_present = True
-            fpath = err_match.groups()[0]
-            lnum = err_match.groups()[1]
-            msg = err_match.groups()[2]
+            filePath = error_match.groups()[0]
+            lineNumber = error_match.groups()[1]
+            msg = error_match.groups()[2]
             print_message(
-                    (err_status_color, " [error] "),
-                    (err_fpath_color, fpath),
-                    (err_lnum_color, lnum),
-                    (err_msg_color, msg),
-                    colorize=not args.no_color,
+                    (error_status_color, " [error] "),
+                    (error_filePath_color, filePath),
+                    (lineNumber_color, lineNumber),
+                    (message_color, msg),
                     )
-        elif warn_match and not args.hide_warnings:
+        elif warning_match:
             warnings_present = True
-            fpath = warn_match.groups()[0]
-            lnum = warn_match.groups()[1]
-            msg = warn_match.groups()[2]
+            filePath = warning_match.groups()[0]
+            lineNumber = warning_match.groups()[1]
+            msg = warning_match.groups()[2]
             print_message(
-                    (warn_status_color, "[warning]"),
-                    (warn_fpath_color, fpath),
-                    (warn_lnum_color, lnum),
-                    (warn_msg_color, msg),
-                    colorize=not args.no_color,
+                    (warning_status_color, "[warning]"),
+                    (warning_filePath_color, filePath),
+                    (lineNumber_color, lineNumber),
+                    (message_color, msg),
                     )
             continue
-        elif note1_match and not args.hide_warnings:
-            note1_present = True
-            fpath = note1_match.groups()[0]
-            func = note1_match.groups()[1]
+        elif note_match:
+            filePath = note_match.groups()[0]
+            func = note_match.groups()[1]
             print_message(
-                    (note1_status_color, "  [note] "),
-                    (note1_fpath_color, fpath),
-                    (note1_lnum_color, ""),
-					(note1_msg_color, "In function "+func),
-                    colorize=not args.no_color,
+                    (note_status_color, "  [note] "),
+                    (note_filePath_color, filePath),
+                    (lineNumber_color, ""),
+					(message_color, "In function "+func),
                     )
-        elif makeerr_match:
-            makeerrors_present = True
-            print " "
-            print ansiformat(makeerr_status_color," [Compilation failed] "), 
-            print " "
         elif args.show_other:
-            if args.no_color:
-                print line
-            else:
-                print ansiformat("darkgray", line)
+            print ansiformat(others_message_color, line),
+
+
     if errors_present:
+        print ansiformat(finalMessage_fail_color," [Compilation failed]") 
         sys.exit(1)
     else:
+        print ansiformat(finalMessage_success_color," [Compilation succeeded]"),
+        if warnings_present:
+            print ansiformat(finalMessage_warning_color," ... but with warnings. Please fix them, it hurts ! :|"),
         sys.exit(0)
  
 if __name__ == '__main__':
