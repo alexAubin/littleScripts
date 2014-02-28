@@ -23,7 +23,7 @@ do
     then
         SIZE_NTUPLE_ON_CRAB=`cat $TAG/rawDump | grep $NTUPLE | awk '{ print $5 }'`
         SIZE_NTUPLE_LOCAL=`ls -l $TAG/$NTUPLE | awk '{print $5}'`
-        if [[ $SIZE_NTUPLE_ON_CRAB != $SIZE_NTUPLE_LOCAL ]]
+        if [[ $SIZE_NTUPLE_ON_CRAB == $SIZE_NTUPLE_LOCAL ]]
         then
             CHECK_SYNC=false
         else
