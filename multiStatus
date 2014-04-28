@@ -1,6 +1,23 @@
 #!/bin/bash
 
-TASKS="T2bw_x-025_mStop-100to475_mLSP-0to300_LeptonFilter T2bw_x-025_mStop-100to475_mLSP-0to375 T2bw_x-025_mStop-100to475_mLSP-1 T2bw_x-025_mStop-500to650_mLSP-150to300_LeptonFilter T2bw_x-025_mStop-500to800_mLSP-1 T2bw_x-025_mStop-500to80_mLSP-0to700 T2bw_x-050_mStop-100to475_mLSP-0to300_LeptonFilter T2bw_x-050_mStop-100to475_mLSP-0to375 T2bw_x-050_mStop-100to475_mLSP-1 T2bw_x-050_mStop-500to650_mLSP-150to300_LeptonFilter T2bw_x-050_mStop-500to800_mLSP-1 T2bw_x-050_mStop-500to80_mLSP-0to700 T2bw_x-075_mStop-100to475_mLSP-0to300_LeptonFilter T2bw_x-075_mStop-100to475_mLSP-0to375 T2bw_x-075_mStop-100to475_mLSP-1 T2bw_x-075_mStop-500to650_mLSP-150to300_LeptonFilter T2bw_x-075_mStop-500to800_mLSP-1 T2bw_x-075_mStop-500to80_mLSP-0to700 T2tb_mStop-100to375 T2tb_mStop-400to475 T2tb_mStop-500to575 T2tb_mStop-600to675 T2tb_mStop-700to750 T2tb_mStop-775to800 T2tb_mStop-825to875 T2tb_mStop-900to950 T2tb_mStop-975to1000 T2tt_mStop-150to350_mLSP-0to250 T2tt_mStop-150to475_mLSP-1 T2tt_mStop-375to475_mLSP-0to375 T2tt_mStop-500to650_mLSP-0to225 T2tt_mStop-500to650_mLSP-250to550 T2tt_mStop-500to800_mLSP-1 T2tt_mStop-675to800_mLSP-0to275 T2tt_mStop-675to800_mLSP-300to700 T2tt_mStop-825to900_mLSP-25to800 T2tt_mStop-925to1000_mLSP-25to900"
+# Usage :
+################################################
+#                                              #
+# Write another script in your multicrab       #
+# folder, such as :                            #
+#                                              #
+# ---------------------------------------------#
+# #!/bin/bash                                  #
+#                                              #
+# export TASKS="Task1 Task2 Task3"             #
+#                                              #
+# ../multiStatus $*                            #
+# ---------------------------------------------#
+#                                              #
+# Then call this script with :                 #
+# ./script -U                                  #
+#                                              #
+################################################
 
 rm -f report.tmp
  
@@ -26,8 +43,8 @@ do
     
     SUBMITTED=`cat $TASK/status.tmp | grep -E "^[0-9]"                              | grep "Submitted\|Scheduled" | wc -l`
     RUNNING=`  cat $TASK/status.tmp | grep -E "^[0-9]"                              | grep "Running"   | wc -l`
-    ERROR=`    cat $TASK/status.tmp | grep -E "^[0-9]" | awk '{if ($5 != 0 || $6 != 0) print}' | grep -v "Submitted\|Scheduled\|Running" | wc -l`
-    OK=`       cat $TASK/status.tmp | grep -E "^[0-9]" | awk '{if ($5 == 0 && $6 == 0) print}' | grep "Done"      | wc -l`
+    ERROR=`    cat $TASK/status.tmp | grep -E "^[0-9]" | awk '{if ($5 != 0) print}' | grep -v "Submitted\|Scheduled\|Running" | wc -l`
+    OK=`       cat $TASK/status.tmp | grep -E "^[0-9]" | awk '{if ($5 == 0) print}' | grep "Done"      | wc -l`
     CLEAR=`    cat $TASK/status.tmp | grep -E "^[0-9]" | awk '{if ($5 == 0) print}' | grep "Retrieved" | wc -l`
     TOTAL=`    cat $TASK/status.tmp | grep -E "^[0-9]" | wc -l`
 
@@ -60,3 +77,4 @@ echo "- ----------------- - ------ - ----- - ----- - ---- - ------- - ------- -"
 cat report.tmp | column -t
 
 rm report.tmp
+
