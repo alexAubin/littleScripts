@@ -135,7 +135,7 @@ def print_message(
 ##################
 
 # Errors
-error_pattern   = re.compile(r"(.+?):([0-9]+?): error: (.+)")
+error_pattern   = re.compile(r"(.+?):([0-9]+?): (fatal error|error): (.+)")
 # Warnings
 warning_pattern = re.compile(r"(.+?):([0-9]+?): warning: (.+)")
 # Notes
@@ -190,7 +190,7 @@ Main CLI handler.
             errors_present = True
             filePath = error_match.groups()[0]
             lineNumber = error_match.groups()[1]
-            msg = error_match.groups()[2]
+            msg = error_match.groups()[3]
             print_message(
                     (error_status_color, " [error] "),
                     (error_filePath_color, filePath),
