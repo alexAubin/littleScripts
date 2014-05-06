@@ -33,29 +33,17 @@ resubmit="false"
 inputTasks="false"
 statusReport="false"
 
-while getopts "hT:SUER" opt;
+while true
 do
-    case "$opt" in
-        h)  printHelp="true"
-            shift
-            ;;
-        T)  inputTasks="true"
-            shift
-            TASKS="$1"
-            shift
-            ;;
-        S)  statusReport="true"
-            shift
-            ;;
-        U)  update="true"
-            shift
-            ;;
-        E)  errorReport="true"
-            shift
-            ;;
-        R)  resubmit="true"
-            shift
-            ;;
+    case "$1" in
+        -h | --help)     printHelp="true";    shift ;;
+        -T | --tasks)    inputTasks="true";   TASKS="$2"; shift 2 ;;
+        -S | --status)   statusReport="true"; shift ;;
+        -U | --update)   update="true";       shift ;;
+        -E | --errors)   errorReport="true";  shift ;;
+        -R | --resubmit) resubmit="true";     shift ;;
+        -- ) shift; break;;
+        *  ) break;;
     esac
 done
 
@@ -75,12 +63,12 @@ then
     echo -e ""
     echo -e "Options :"
     echo -e ""
-    echo -e "   -h \t Print this help, duh."
-    echo -e "   -T \t Specify the list of tasks to monitor instead of automatic detection."
-    echo -e "   -S \t Produce a status report of the tasks."
-    echo -e "   -U \t Update the status (crab -status) for each task before the status report."
-    echo -e "   -E \t Show a summary of the error/crash reasons."
-    echo -e "   -R \t Ask crab to resubmit each task with a faulty status."
+    echo -e "   -h, --help    \tPrint this help, duh."
+    echo -e "   -T, --tasks   \tSpecify the list of tasks to monitor instead of automatic detection."
+    echo -e "   -S, --status  \tShow a status report of the tasks."
+    echo -e "   -U, --update  \tUpdate the status (crab -status) for each task before the status report."
+    echo -e "   -E, --errors  \tShow a summary of the error/crash reasons."
+    echo -e "   -R, --resubmit\tAsk crab to resubmit each task with a faulty status."
     exit
 fi
 
