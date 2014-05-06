@@ -1,6 +1,9 @@
 #!/bin/bash
 
+
 ####################################################################
+#                                                                  #
+#  Author : Alex. Aubin @ IPHC Strasbourg, 2014                    #
 #                                                                  #
 #  Disclaimer                                                      #
 # ============                                                     #
@@ -33,15 +36,17 @@ resubmit="false"
 inputTasks="false"
 statusReport="false"
 
+OPTIONS=`getopt -o "hT:SUER" --long "help tasks: status update errors resubmit" -n octopus -- "$@"`
+eval set -- "$OPTIONS"
 while true
 do
     case "$1" in
-        -h | --help)     printHelp="true";    shift ;;
-        -T | --tasks)    inputTasks="true";   TASKS="$2"; shift 2 ;;
-        -S | --status)   statusReport="true"; shift ;;
-        -U | --update)   update="true";       shift ;;
-        -E | --errors)   errorReport="true";  shift ;;
-        -R | --resubmit) resubmit="true";     shift ;;
+        -h | -H | --help) printHelp="true";    shift ;;
+        -T | --tasks)     inputTasks="true";   TASKS="$2"; shift 2 ;;
+        -S | --status)    statusReport="true"; shift ;;
+        -U | --update)    update="true";       shift ;;
+        -E | --errors)    errorReport="true";  shift ;;
+        -R | --resubmit)  resubmit="true";     shift ;;
         -- ) shift; break;;
         *  ) break;;
     esac
@@ -53,22 +58,24 @@ done
 
 if [[ $printHelp == "true" ]]
 then
-    echo -e ""
-    echo -e " Octopus"
-    echo -e "---------"
-    echo -e "Tool to monitor and manage multiple crab tasks from command-line.                                                 "
-    echo -e "By default, the list of task to consider is detected automatically from the crab folders in the current directory."
-    echo -e "You can also ignore some tasks by listing them in a file named '.octopusIgnore'.                                  "
-    echo -e "NB: if -U option is not specified, the job status are not automatically updated since the last octopus -U.        " 
-    echo -e ""
-    echo -e "Options :"
-    echo -e ""
-    echo -e "   -h, --help    \tPrint this help, duh."
-    echo -e "   -T, --tasks   \tSpecify the list of tasks to monitor instead of automatic detection."
-    echo -e "   -S, --status  \tShow a status report of the tasks."
-    echo -e "   -U, --update  \tUpdate the status (crab -status) for each task before the status report."
-    echo -e "   -E, --errors  \tShow a summary of the error/crash reasons."
-    echo -e "   -R, --resubmit\tAsk crab to resubmit each task with a faulty status."
+    echo "
+  Octopus
+ ---------
+ Tool to monitor and manage multiple crab tasks from command-line.                                                 
+
+ By default, the list of task to consider is detected automatically from the crab folders in the current directory.
+ You can also ignore some tasks by listing them in a file named .octopusIgnore.                                  
+ NB: if -U option is not specified, the job status are not automatically updated since the last octopus -U.        
+
+ Usage: octopus <[options]>
+ Options:
+        -H  --help      Print this help, duh.
+        -T  --tasks     Specify the list of tasks to monitor instead of automatic detection.
+        -S  --status    Show a status report of the tasks.
+        -U  --update    Update the status (crab -status) for each task before the status report.
+        -E  --errors    Show a summary of the error/crash reasons.
+        -R  --resubmit  Ask crab to resubmit each task with a faulty status.
+    "
     exit
 fi
 
