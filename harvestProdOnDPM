@@ -34,9 +34,15 @@
 # Usage
 # -----
 #
-# * define PRODNAME and TARGET as you need 
+# * define PRODNAME and TARGET as you need
 #
-# * type :
+#   Pro tip / Warning : try to do this in a separate script that call 
+#             this one, to avoid duplicating this file multiple time 
+#             (easier to update !) 
+#             But if you dont, you need to uncomment the "configuration 
+#             variable" part.
+#
+# * call :
 #             ./harvestProdOnDPM taskName
 #
 # * get coffee
@@ -47,14 +53,13 @@
 # Configuration variables #
 ###########################
 
-PRODNAME=July13-v1
-TARGET=NTuple
-TASKNAME=$1
+#PRODNAME=February14-missingDatasets-v2
+#TARGET=NTuple
+#TASKNAME=$1
 
-LOCAL_PWD=$PWD
-DPM=/dpm/in2p3.fr/home/cms/phedex/store/user
-CRAB_HOME=${DPM}/${USER}/${PRODNAME}
-
+#LOCAL_PWD=$PWD
+#DPM=/dpm/in2p3.fr/home/cms/phedex/store/user
+#CRAB_HOME=${DPM}/${USER}/${PRODNAME}
 
 ################################################################
 # Create local folder and get list of content on remote folder #
@@ -70,6 +75,8 @@ RAWLIST=`cat $TASKNAME/rawDump | awk '{ print $9 }'`
 ########################################################
 # Parse the content to list what needs to be harvested #
 ########################################################
+
+echo "[${TASKNAME}] Parsing DPM files and checking sync with local files ..." | tee $TASKNAME/log
 
 # For each file in the list...
 for FILE in $RAWLIST
@@ -151,10 +158,18 @@ rm -f $TASKNAME/rawDump
 
 rm -f $TASKNAME/log
 
-for FILE in `cat $TASKNAME/toBeHarvested.list`
-do
-    echo "$TASKNAME :: Copying $FILE ... " >> $TASKNAME/log
-    rfcp $CRAB_HOME/$TASKNAME/$FILE ./$TASKNAME/
-done
-
+NCOPY=`cat $TASKNAME/toBeHarvested.list 2>/dev/null | wc -l`
+if [[ $NCOPY != 0 ]]
+then
+    echo "[${TASKNAME}] $NCOPY files need to be harvested" | tee $TASKNAME/log
+    echo "[${TASKNAME}] Starting copies ..." | tee $TASKNAME/log
+    for FILE in `cat $TASKNAME/toBeHarvested.list`
+    do
+        echo "[$TASKNAME] Copying $FILE ... " | tee $TASKNAME/log
+        rfcp $CRAB_HOME/$TASKNAME/$FILE ./$TASKNAME/ | tee $TASKNAME/log
+    done
+    echo "[${TASKNAME}] Done." | tee $TASKNAME/log
+else
+    echo "[${TASKNAME}] No need to do anything" | tee $TASKNAME/log
+fi
 
