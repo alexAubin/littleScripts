@@ -11,13 +11,73 @@
 #                                              #
 # export TASKS="Task1 Task2 Task3"             #
 #                                              #
-# ../multiStatus $*                            #
+# ~/folderWhereYouKeepMyScripts/multiStatus $* #
 # ---------------------------------------------#
 #                                              #
 # Then call this script with :                 #
-# ./script -U                                  #
+# ./script [options]                           #
 #                                              #
 ################################################
+
+###################
+# Parsing options #
+###################
+
+printHelp="false"
+update="false"
+errorReport="false"
+resubmit="false"
+
+while getopts "hUER" opt;
+do
+    case "$opt" in
+        h)  printHelp="true"
+            ;;
+        U)  update="true"
+            ;;
+        E)  errorReport="true"
+            ;;
+        R)  resubmit="true"
+            ;;
+    esac
+done
+
+########
+# Help #
+########
+
+if [[ $printHelp == "true" ]]
+then
+    echo -e "multiStatus \t Tool to monitor and manage multiple crab tasks from command-line"
+    echo -e "            \t The list of crab tasks is to be set with the env. variable 'TASKS'"
+    echo -e "            \t NB: if -U option is not specified, it only shows the status from the last multiStatus -U" 
+    echo -e ""
+    echo -e "\t   -h \t Print this help, duh."
+    echo -e ""
+    echo -e "\t   -U \t Retrieve the status (crab -status) for each task before the report."
+    echo -e ""
+    echo -e "\t   -E \t Show a summary of the error/crash reasons at the end of the report"
+    echo -e ""
+    echo -e "\t   -R \t Ask crab to resubmit each task with a faulty status"
+    exit
+fi
+
+#####################
+# Updating if asked #
+#####################
+
+if [[ $update == "true" ]]
+then
+    for TASK in $TASKS
+    do
+        echo "  Checking status of $TASK ... "
+        crab -status -c $TASK > $TASK/status.tmp 2>&1
+    done
+fi
+
+##################
+# Writing report #
+##################
 
 rm -f report.tmp
  
@@ -34,13 +94,6 @@ ALL_TOTAL=0
 
 for TASK in $TASKS
 do
-    # Update if option is specified
-    if [[ $1 == "-U" ]]
-    then
-        echo "  Checking status of $TASK ... "
-        crab -status -c $TASK > $TASK/status.tmp 2>&1
-    fi
-    
     SUBMITTED=`cat $TASK/status.tmp | grep -E "^[0-9]"                              | grep "Submitted\|Scheduled" | wc -l`
     RUNNING=`  cat $TASK/status.tmp | grep -E "^[0-9]"                              | grep "Running"   | wc -l`
     ERROR=`    cat $TASK/status.tmp | grep -E "^[0-9]" | awk '{if ($5 != 0) print}' | grep -v "Submitted\|Scheduled\|Running" | wc -l`
@@ -56,8 +109,9 @@ do
     ALL_OK=`echo $ALL_OK + $OK | bc`
     ALL_CLEAR=`echo $ALL_CLEAR + $CLEAR | bc`
     ALL_TOTAL=`echo $ALL_TOTAL + $TOTAL | bc`
-
 done
+
+# Adding total line
 
 echo "- ----------------- - ------ - ----- - ----- - ---- - ------- - ------- -" >> report.tmp
 
@@ -73,8 +127,70 @@ ALL_TOTAL=`echo $ALL_TOTAL "*" 100 / $ALL_TOTAL | bc`
 echo "| All(percent) | ${ALL_SUBMITTED}% | ${ALL_RUNNING}% | ${ALL_ERROR}% | ${ALL_OK}% | ${ALL_CLEAR}% | ${ALL_TOTAL}% |" >> report.tmp
 
 echo "- ----------------- - ------ - ----- - ----- - ---- - ------- - ------- -" >> report.tmp
-   
+  
+###################
+# Printing report #
+###################
+
 cat report.tmp | column -t
 
 rm report.tmp
 
+########################
+# Writing error report #
+########################
+
+if [[ $errorReport == "true" ]]
+then
+
+    echo " Writing errors report ... (see https://twiki.cern.ch/twiki/bin/view/CMSPublic/JobExitCodes) "
+    echo ", ----------------- - ------ " >> report.tmp
+
+    for TASK in $TASKS
+    do
+        cat $TASK/status.tmp | grep -E "^[0-9]" | awk '{if ($5 != 0) print}' | grep -v "Submitted\|Scheduled\|Running\|Aborted" | awk '{print $6}' | uniq -c > $TASK/errors.tmp
+        nAborted=`cat $TASK/status.tmp | grep -E "^[0-9]" | awk '{if ($5 != 0) print}' | grep -v "Submitted\|Scheduled\|Running" | grep "Aborted" | wc -l`
+        if [[ $nAborted != 0 ]]
+        then 
+            echo "$nAborted Aborted" >> $TASK/errors.tmp
+        fi
+
+        if [[ `cat $TASK/errors.tmp | wc -l` != 0 ]]
+        then
+            echo "| $TASK |" `cat $TASK/errors.tmp | awk '{print $2 " (x" $1 ")"}'` >> report.tmp
+        fi
+        rm $TASK/errors.tmp
+    done
+    echo ", ----------------- - ------ " >> report.tmp
+    cat report.tmp | column -t
+    rm report.tmp
+
+fi
+
+##################
+# Resubmit tasks #
+##################
+
+if [[ $resubmit == "true" ]]
+then
+    for TASK in $TASKS
+    do
+        cat $TASK/status.tmp | grep -E "^[0-9]" | awk '{if ($5 != 0 || $6 != 0) print}' | grep -v "Submitted\|Scheduled\|Running" > resubmitList.tmp
+        if [[ `cat resubmitList.tmp | wc -l` == 0 ]]
+        then 
+            echo No job to resubmit for $TASK
+        else
+            while [[ `cat resubmitList.tmp 2>/dev/null | wc -l` -gt 0 ]];
+            do
+                NRESUBMIT=`cat resubmitList.tmp | head -n500 | wc -l`
+                echo Resubmitting $NRESUBMIT jobs for $TASK ...
+                LIST=`cat resubmitList.tmp | head -n500 | awk '{print $1}' | tr '\n' ',' | sed 's/,$//g'`
+                crab -forceResubmit $LIST -c $TASK > log.tmp
+                cat log.tmp | grep "submitted" | tail -n1
+                rm -f log.tmp
+                cat resubmitList.tmp | tail -n +501 > resubmitList.tmp2
+                mv resubmitList.tmp2 resubmitList.tmp
+            done
+        fi 
+    done
+fi
