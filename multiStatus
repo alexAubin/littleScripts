@@ -1,23 +1,26 @@
 #!/bin/bash
 
-# Usage :
-################################################
-#                                              #
-# Write another script in your multicrab       #
-# folder, such as :                            #
-#                                              #
-# ---------------------------------------------#
-# #!/bin/bash                                  #
-#                                              #
-# export TASKS="Task1 Task2 Task3"             #
-#                                              #
-# ~/folderWhereYouKeepMyScripts/multiStatus $* #
-# ---------------------------------------------#
-#                                              #
-# Then call this script with :                 #
-# ./script [options]                           #
-#                                              #
-################################################
+####################################################################
+#                                                                  #
+#  Disclaimer                                                      #
+# ============                                                     #
+#                                                                  #
+# - "Each time you duplicate code, god kills a kitten."            #
+#   To avoid duplicating this script everywhere you need it,       #
+#   put a simple alias in your .bashrc. It'll be easier if you     #
+#   need to update this file.                                      #
+#                                                                  #
+# - Even though this tool allows to easily deal with a massive     #
+#   number of crab task, you should keep using your brain and not  #
+#   blindly automatically resubmit tasks whom >50% job crashed.    #
+#   It probably means you're doing something wrong, and wasting    #
+#   grid time.                                                     #
+#                                                                  #
+#  Usage                                                           #
+# =======                                                          #
+#  see "multiStatus -h"                                            #
+#                                                                  #
+####################################################################
 
 ###################
 # Parsing options #
@@ -27,17 +30,27 @@ printHelp="false"
 update="false"
 errorReport="false"
 resubmit="false"
+inputTasks="false"
 
-while getopts "hUER" opt;
+while getopts "hT:UER" opt;
 do
     case "$opt" in
         h)  printHelp="true"
+            shift
+            ;;
+        T)  inputTasks="true"
+            shift
+            TASKS="$1"
+            shift
             ;;
         U)  update="true"
+            shift
             ;;
         E)  errorReport="true"
+            shift
             ;;
         R)  resubmit="true"
+            shift
             ;;
     esac
 done
@@ -48,18 +61,39 @@ done
 
 if [[ $printHelp == "true" ]]
 then
-    echo -e "multiStatus \t Tool to monitor and manage multiple crab tasks from command-line"
-    echo -e "            \t The list of crab tasks is to be set with the env. variable 'TASKS'"
-    echo -e "            \t NB: if -U option is not specified, it only shows the status from the last multiStatus -U" 
+    echo -e "multiStatus \t Tool to monitor and manage multiple crab tasks from command-line.                                                "
+    echo -e "            \t By default, the list of task to monitor is detected automatically from the crab folders in the current directory."
+    echo -e "            \t You can also ignore some tasks by listing them in a file named '.multiStatusIgnore'.                             "
+    echo -e "            \t NB: if -U option is not specified, it only shows the status from the last multiStatus -U.                        " 
     echo -e ""
     echo -e "\t   -h \t Print this help, duh."
     echo -e ""
+    echo -e "\t   -T \t Specify the list of tasks to monitor instead of automatic detection."
+    echo -e ""
     echo -e "\t   -U \t Retrieve the status (crab -status) for each task before the report."
     echo -e ""
-    echo -e "\t   -E \t Show a summary of the error/crash reasons at the end of the report"
+    echo -e "\t   -E \t Show a summary of the error/crash reasons at the end of the report."
     echo -e ""
-    echo -e "\t   -R \t Ask crab to resubmit each task with a faulty status"
+    echo -e "\t   -R \t Ask crab to resubmit each task with a faulty status."
     exit
+fi
+
+############################
+# Auto-detect crab folders #
+############################
+
+if [[ $inputTasks == "false" ]]
+then
+    CRABFOLDERS=`ls -d */log/crab.log | tr '/' ' ' | awk '{print $1}'`
+    TASKS=""
+    for FOLDER in $CRABFOLDERS
+    do
+        # Only keep FOLDERS that are not in ".multiStatusIgnore"
+        if [[ `cat .multiStatusIgnore 2>/dev/null | grep ^$FOLDER$` == "" ]]
+        then
+            TASKS="$TASKS $FOLDER"
+        fi
+    done
 fi
 
 #####################
@@ -94,12 +128,14 @@ ALL_TOTAL=0
 
 for TASK in $TASKS
 do
-    SUBMITTED=`cat $TASK/status.tmp | grep -E "^[0-9]"                              | grep "Submitted\|Scheduled" | wc -l`
-    RUNNING=`  cat $TASK/status.tmp | grep -E "^[0-9]"                              | grep "Running"   | wc -l`
-    ERROR=`    cat $TASK/status.tmp | grep -E "^[0-9]" | awk '{if ($5 != 0) print}' | grep -v "Submitted\|Scheduled\|Running" | wc -l`
-    OK=`       cat $TASK/status.tmp | grep -E "^[0-9]" | awk '{if ($5 == 0) print}' | grep "Done"      | wc -l`
-    CLEAR=`    cat $TASK/status.tmp | grep -E "^[0-9]" | awk '{if ($5 == 0) print}' | grep "Retrieved" | wc -l`
-    TOTAL=`    cat $TASK/status.tmp | grep -E "^[0-9]" | wc -l`
+    cat $TASK/status.tmp | grep -E "^[0-9]" > .joblist.tmp
+
+    SUBMITTED=`cat .joblist.tmp                              | grep "Submitted\|Scheduled" | wc -l`
+    RUNNING=`  cat .joblist.tmp                              | grep "Running"   | wc -l`
+    ERROR=`    cat .joblist.tmp | awk '{if ($5 != 0) print}' | grep -v "Submitted\|Scheduled\|Running" | wc -l`
+    OK=`       cat .joblist.tmp | awk '{if ($5 == 0) print}' | grep "Done"      | wc -l`
+    CLEAR=`    cat .joblist.tmp | awk '{if ($5 == 0) print}' | grep "Retrieved" | wc -l`
+    TOTAL=`    cat .joblist.tmp | wc -l`
 
     echo "| $TASK | $SUBMITTED | $RUNNING | $ERROR | $OK | $CLEAR | $TOTAL |" >> report.tmp
 
@@ -110,6 +146,8 @@ do
     ALL_CLEAR=`echo $ALL_CLEAR + $CLEAR | bc`
     ALL_TOTAL=`echo $ALL_TOTAL + $TOTAL | bc`
 done
+
+rm .joblist.tmp
 
 # Adding total line
 
@@ -193,4 +231,5 @@ then
             done
         fi 
     done
+    rm -f resubmitList.tmp
 fi
