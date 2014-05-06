@@ -1,0 +1,240 @@
+#!/bin/bash
+
+####################################################################
+#                                                                  #
+#  Disclaimer                                                      #
+# ============                                                     #
+#                                                                  #
+# - "Each time you duplicate code, god kills a kitten."            #
+#   To avoid duplicating this script everywhere you need it,       #
+#   put a simple alias in your .bashrc. It'll be easier if you     #
+#   need to update this file.                                      #
+#                                                                  #
+# - Even though this tool allows to easily deal with a massive     #
+#   number of crab task, you should keep using your brain and not  #
+#   blindly automatically resubmit tasks whom >50% job crashed.    #
+#   It probably means you're doing something wrong, and wasting    #
+#   grid time.                                                     #
+#                                                                  #
+#  Usage                                                           #
+# =======                                                          #
+#  see "octopus -h"                                                #
+#                                                                  #
+####################################################################
+
+###################
+# Parsing options #
+###################
+
+printHelp="false"
+update="false"
+errorReport="false"
+resubmit="false"
+inputTasks="false"
+statusReport="false"
+
+while getopts "hT:SUER" opt;
+do
+    case "$opt" in
+        h)  printHelp="true"
+            shift
+            ;;
+        T)  inputTasks="true"
+            shift
+            TASKS="$1"
+            shift
+            ;;
+        S)  statusReport="true"
+            shift
+            ;;
+        U)  update="true"
+            shift
+            ;;
+        E)  errorReport="true"
+            shift
+            ;;
+        R)  resubmit="true"
+            shift
+            ;;
+    esac
+done
+
+########
+# Help #
+########
+
+if [[ $printHelp == "true" ]]
+then
+    echo -e ""
+    echo -e " Octopus"
+    echo -e "---------"
+    echo -e "Tool to monitor and manage multiple crab tasks from command-line.                                                 "
+    echo -e "By default, the list of task to consider is detected automatically from the crab folders in the current directory."
+    echo -e "You can also ignore some tasks by listing them in a file named '.octopusIgnore'.                                  "
+    echo -e "NB: if -U option is not specified, the job status are not automatically updated since the last octopus -U.        " 
+    echo -e ""
+    echo -e "Options :"
+    echo -e ""
+    echo -e "   -h \t Print this help, duh."
+    echo -e "   -T \t Specify the list of tasks to monitor instead of automatic detection."
+    echo -e "   -S \t Produce a status report of the tasks."
+    echo -e "   -U \t Update the status (crab -status) for each task before the status report."
+    echo -e "   -E \t Show a summary of the error/crash reasons."
+    echo -e "   -R \t Ask crab to resubmit each task with a faulty status."
+    exit
+fi
+
+############################
+# Auto-detect crab folders #
+############################
+
+if [[ $inputTasks == "false" ]]
+then
+    CRABFOLDERS=`ls -d */log/crab.log | tr '/' ' ' | awk '{print $1}'`
+    TASKS=""
+    for FOLDER in $CRABFOLDERS
+    do
+        # Only keep FOLDERS that are not in ".octopusIgnore"
+        if [[ `cat .octopusIgnore 2>/dev/null | grep ^$FOLDER$` == "" ]]
+        then
+            TASKS="$TASKS $FOLDER"
+        fi
+    done
+fi
+
+#####################
+# Updating if asked #
+#####################
+
+if [[ $update == "true" ]]
+then
+    for TASK in $TASKS
+    do
+        echo "  Checking status of $TASK ... "
+        crab -status -c $TASK > $TASK/status.tmp 2>&1
+    done
+fi
+
+##################
+# Writing report #
+##################
+
+if [[ $statusReport == "true" ]]
+then 
+    rm -f report.tmp
+
+    echo ", ----------------- - ------ - ----- - ----- - ---- - ------- - ------- ," >> report.tmp
+    echo "|        Task       | Submit |  Run  | Error |  OK  |  Clear  |  Total  |" >> report.tmp
+    echo "- ----------------- - ------ - ----- - ----- - ---- - ------- - ------- -" >> report.tmp
+
+    ALL_SUBMITTED=0
+    ALL_RUNNING=0
+    ALL_ERROR=0
+    ALL_OK=0
+    ALL_CLEAR=0
+    ALL_TOTAL=0
+
+    for TASK in $TASKS
+    do
+        cat $TASK/status.tmp | grep -E "^[0-9]" > .joblist.tmp
+
+        SUBMITTED=`cat .joblist.tmp                              | grep "Submitted\|Scheduled" | wc -l`
+        RUNNING=`  cat .joblist.tmp                              | grep "Running"   | wc -l`
+        ERROR=`    cat .joblist.tmp | awk '{if ($5 != 0) print}' | grep -v "Submitted\|Scheduled\|Running" | wc -l`
+        OK=`       cat .joblist.tmp | awk '{if ($5 == 0) print}' | grep "Done"      | wc -l`
+        CLEAR=`    cat .joblist.tmp | awk '{if ($5 == 0) print}' | grep "Retrieved" | wc -l`
+        TOTAL=`    cat .joblist.tmp | wc -l`
+
+        echo "| $TASK | $SUBMITTED | $RUNNING | $ERROR | $OK | $CLEAR | $TOTAL |" >> report.tmp
+
+        ALL_SUBMITTED=`echo $ALL_SUBMITTED + $SUBMITTED | bc`
+        ALL_RUNNING=`echo $ALL_RUNNING + $RUNNING | bc`
+        ALL_ERROR=`echo $ALL_ERROR + $ERROR | bc`
+        ALL_OK=`echo $ALL_OK + $OK | bc`
+        ALL_CLEAR=`echo $ALL_CLEAR + $CLEAR | bc`
+        ALL_TOTAL=`echo $ALL_TOTAL + $TOTAL | bc`
+    done
+
+    rm .joblist.tmp
+
+    # Adding total line
+
+    echo "- ----------------- - ------ - ----- - ----- - ---- - ------- - ------- -" >> report.tmp
+
+    echo "| All | $ALL_SUBMITTED | $ALL_RUNNING | $ALL_ERROR | $ALL_OK | $ALL_CLEAR | $ALL_TOTAL |" >> report.tmp
+
+    ALL_SUBMITTED=`echo $ALL_SUBMITTED "*" 100 / $ALL_TOTAL | bc`
+    ALL_RUNNING=`echo $ALL_RUNNING "*" 100 / $ALL_TOTAL | bc`
+    ALL_ERROR=`echo $ALL_ERROR "*" 100 / $ALL_TOTAL | bc`
+    ALL_OK=`echo $ALL_OK "*" 100 / $ALL_TOTAL | bc`
+    ALL_CLEAR=`echo $ALL_CLEAR "*" 100 / $ALL_TOTAL | bc`
+    ALL_TOTAL=`echo $ALL_TOTAL "*" 100 / $ALL_TOTAL | bc`
+
+    echo "| All(percent) | ${ALL_SUBMITTED}% | ${ALL_RUNNING}% | ${ALL_ERROR}% | ${ALL_OK}% | ${ALL_CLEAR}% | ${ALL_TOTAL}% |" >> report.tmp
+
+    echo "- ----------------- - ------ - ----- - ----- - ---- - ------- - ------- -" >> report.tmp
+
+    cat report.tmp | column -t
+
+    rm report.tmp
+fi
+
+########################
+# Writing error report #
+########################
+
+if [[ $errorReport == "true" ]]
+then
+
+    echo " Writing errors report ... (see https://twiki.cern.ch/twiki/bin/view/CMSPublic/JobExitCodes) "
+    echo ", ----------------- - ------ " >> report.tmp
+
+    for TASK in $TASKS
+    do
+        cat $TASK/status.tmp | grep -E "^[0-9]" | awk '{if ($5 != 0) print}' | grep -v "Submitted\|Scheduled\|Running\|Aborted" | awk '{print $6}' | uniq -c > $TASK/errors.tmp
+        nAborted=`cat $TASK/status.tmp | grep -E "^[0-9]" | awk '{if ($5 != 0) print}' | grep -v "Submitted\|Scheduled\|Running" | grep "Aborted" | wc -l`
+        if [[ $nAborted != 0 ]]
+        then 
+            echo "$nAborted Aborted" >> $TASK/errors.tmp
+        fi
+
+        if [[ `cat $TASK/errors.tmp | wc -l` != 0 ]]
+        then
+            echo "| $TASK |" `cat $TASK/errors.tmp | awk '{print $2 " (x" $1 ")"}'` >> report.tmp
+        fi
+        rm $TASK/errors.tmp
+    done
+    echo ", ----------------- - ------ " >> report.tmp
+    cat report.tmp | column -t
+    rm report.tmp
+
+fi
+
+##################
+# Resubmit tasks #
+##################
+
+if [[ $resubmit == "true" ]]
+then
+    for TASK in $TASKS
+    do
+        cat $TASK/status.tmp | grep -E "^[0-9]" | awk '{if ($5 != 0 || $6 != 0) print}' | grep -v "Submitted\|Scheduled\|Running" > resubmitList.tmp
+        if [[ `cat resubmitList.tmp | wc -l` == 0 ]]
+        then 
+            echo No job to resubmit for $TASK
+        else
+            while [[ `cat resubmitList.tmp 2>/dev/null | wc -l` -gt 0 ]];
+            do
+                NRESUBMIT=`cat resubmitList.tmp | head -n500 | wc -l`
+                echo Resubmitting $NRESUBMIT jobs for $TASK ...
+                LIST=`cat resubmitList.tmp | head -n500 | awk '{print $1}' | tr '\n' ',' | sed 's/,$//g'`
+                crab -forceResubmit $LIST -c $TASK > log.tmp
+                cat log.tmp | grep "submitted" | tail -n1
+                rm -f log.tmp
+                cat resubmitList.tmp | tail -n +501 > resubmitList.tmp2
+                mv resubmitList.tmp2 resubmitList.tmp
+            done
+        fi 
+    done
+    rm -f resubmitList.tmp
+fi
