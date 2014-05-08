@@ -35,18 +35,20 @@ errorReport="false"
 resubmit="false"
 inputTasks="false"
 statusReport="false"
+ignoreClear="false"
 
-OPTIONS=`getopt -o "hT:SUER" --long "help tasks: status update errors resubmit" -n octopus -- "$@"`
+OPTIONS=`getopt -o "hT:SUERI" --long "help tasks: status update errors resubmit ignoreClear" -n octopus -- "$@"`
 eval set -- "$OPTIONS"
 while true
 do
     case "$1" in
-        -h | -H | --help) printHelp="true";    shift ;;
-        -T | --tasks)     inputTasks="true";   TASKS="$2"; shift 2 ;;
-        -S | --status)    statusReport="true"; shift ;;
-        -U | --update)    update="true";       shift ;;
-        -E | --errors)    errorReport="true";  shift ;;
-        -R | --resubmit)  resubmit="true";     shift ;;
+        -h | -H | --help)   printHelp="true";    shift ;;
+        -T | --tasks)       inputTasks="true";   TASKS="$2"; shift 2 ;;
+        -S | --status)      statusReport="true"; shift ;;
+        -U | --update)      update="true";       shift ;;
+        -E | --errors)      errorReport="true";  shift ;;
+        -R | --resubmit)    resubmit="true";     shift ;;
+        -I | --ignoreClear) ignoreClear="true";  shift ;;
         -- ) shift; break;;
         *  ) break;;
     esac
@@ -69,12 +71,13 @@ then
 
  Usage: octopus <[options]>
  Options:
-        -H  --help      Print this help, duh.
-        -T  --tasks     Specify the list of tasks to monitor instead of automatic detection.
-        -S  --status    Show a status report of the tasks.
-        -U  --update    Update the status (crab -status) for each task before the status report.
-        -E  --errors    Show a summary of the error/crash reasons.
-        -R  --resubmit  Ask crab to resubmit each task with a faulty status.
+        -H  --help         Print this help, duh.
+        -T  --tasks        Specify the list of tasks to monitor instead of automatic detection.
+        -S  --status       Show a status report of the tasks.
+        -U  --update       Update the status (crab -status) for each task before the status report.
+        -E  --errors       Show a summary of the error/crash reasons.
+        -R  --resubmit     Ask crab to resubmit each task with a faulty status.
+        -I  --ignoreClear  With option -S, add tasks with 100% clear completion to the .octopusIgnore
     "
     exit
 fi
@@ -139,6 +142,17 @@ then
         OK=`       cat .joblist.tmp | awk '{if ($5 == 0) print}' | grep "Done"      | wc -l`
         CLEAR=`    cat .joblist.tmp | awk '{if ($5 == 0) print}' | grep "Retrieved" | wc -l`
         TOTAL=`    cat .joblist.tmp | wc -l`
+
+        if [[ $ignoreClear == "true" ]]
+        then
+            if [[ $CLEAR == $TOTAL ]]
+            then
+                echo "Adding $TASK to .octopusIgnore"
+                echo $TASK >> .octopusIgnore
+                continue;
+            fi
+        fi
+
 
         echo "| $TASK | $SUBMITTED | $RUNNING | $ERROR | $OK | $CLEAR | $TOTAL |" >> report.tmp
 
