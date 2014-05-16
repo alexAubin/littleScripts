@@ -30,6 +30,7 @@
 ###################
 
 printHelp="false"
+generateConfig="false"
 update="false"
 errorReport="false"
 resubmit="false"
@@ -37,22 +38,26 @@ inputTasks="false"
 statusReport="false"
 ignoreClear="false"
 
-OPTIONS=`getopt -o "hT:SUERI" --long "help tasks: status update errors resubmit ignoreClear" -n octopus -- "$@"`
+OPTIONS=`getopt -o "hG:T:SUERI" --long "help generateConfig: tasks: status update errors resubmit ignoreClear" -n octopus -- "$@"`
 eval set -- "$OPTIONS"
 while true
 do
     case "$1" in
-        -h | -H | --help)   printHelp="true";    shift ;;
-        -T | --tasks)       inputTasks="true";   TASKS="$2"; shift 2 ;;
-        -S | --status)      statusReport="true"; shift ;;
-        -U | --update)      update="true";       shift ;;
-        -E | --errors)      errorReport="true";  shift ;;
-        -R | --resubmit)    resubmit="true";     shift ;;
-        -I | --ignoreClear) ignoreClear="true";  shift ;;
+        -h | -H | --help)       printHelp="true";      shift ;;
+        -G | --generateConfig)  generateConfig="true"; PRODNAME="$2"; shift 2 ;;
+        -T | --tasks)           inputTasks="true";     TASKS="$2"; shift 2 ;;
+        -S | --status)          statusReport="true";   shift ;;
+        -U | --update)          update="true";         shift ;;
+        -E | --errors)          errorReport="true";    shift ;;
+        -R | --resubmit)        resubmit="true";       shift ;;
+        -I | --ignoreClear)     ignoreClear="true";    shift ;;
         -- ) shift; break;;
         *  ) break;;
     esac
 done
+
+echo "prodname = $PRODNAME"
+
 
 ########
 # Help #
@@ -71,15 +76,48 @@ then
 
  Usage: octopus <[options]>
  Options:
-        -H  --help         Print this help, duh.
-        -T  --tasks        Specify the list of tasks to monitor instead of automatic detection.
-        -S  --status       Show a status report of the tasks.
-        -U  --update       Update the status (crab -status) for each task before the status report.
-        -E  --errors       Show a summary of the error/crash reasons.
-        -R  --resubmit     Ask crab to resubmit each task with a faulty status.
-        -I  --ignoreClear  With option -S, add tasks with 100% clear completion to the .octopusIgnore
+        -H  --help                           Print this help, duh.
+        -G  --generateConfig ProdName        Generate a multicrab.cfg file based on multicrab.list listing the crab task 
+                                             name in first column and dataset name in second column. 
+        -T  --tasks          \"Task1 Task2\"   Specify the list of tasks to monitor instead of automatic detection.
+        -S  --status                         Show a status report of the tasks.
+        -U  --update                         Update the status (crab -status) for each task before the status report.
+        -E  --errors                         Show a summary of the error/crash reasons.
+        -R  --resubmit                       Ask crab to resubmit each task with a faulty status.
+        -I  --ignoreClear                    With option -S, add tasks with 100% clear completion to the .octopusIgnore
     "
     exit
+fi
+
+########################
+# Generate config file #
+########################
+        
+if [[ $generateConfig == "true" ]]
+then
+
+    echo "[MULTICRAB]"
+    echo "cfg=crab.cfg"
+    echo ""
+    echo "[COMMON]"
+    echo ""
+
+    cat multicrab.list | while read LINE ; 
+    do
+        NAME=`echo $LINE | awk '{print $1}'`
+        DATASET=`echo $LINE | awk '{print $2}'`
+
+        if [[ $NAME == "" ]] 
+        then  
+            continue; 
+        fi
+
+        echo ""
+        echo "[$NAME]"
+        echo "CMSSW.datasetpath=$DATASET"
+        echo "USER.user_remote_dir=$PRODNAME/$NAME"
+
+    done
 fi
 
 ############################
@@ -88,7 +126,7 @@ fi
 
 if [[ $inputTasks == "false" ]]
 then
-    CRABFOLDERS=`ls -d */log/crab.log | tr '/' ' ' | awk '{print $1}'`
+    CRABFOLDERS=`ls -d */log/crab.log 2>&1 | tr '/' ' ' | awk '{print $1}'`
     TASKS=""
     for FOLDER in $CRABFOLDERS
     do
