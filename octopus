@@ -56,9 +56,6 @@ do
     esac
 done
 
-echo "prodname = $PRODNAME"
-
-
 ########
 # Help #
 ########
@@ -176,7 +173,7 @@ then
 
         SUBMITTED=`cat .joblist.tmp                              | grep "Submitted\|Scheduled" | wc -l`
         RUNNING=`  cat .joblist.tmp                              | grep "Running"   | wc -l`
-        ERROR=`    cat .joblist.tmp | awk '{if ($5 != 0) print}' | grep -v "Submitted\|Scheduled\|Running" | wc -l`
+        ERROR=`    cat .joblist.tmp | awk '{if (($3 == "Aborted") || ($5 != 0)) print}' | grep -v "Submitted\|Scheduled\|Running" | wc -l`
         OK=`       cat .joblist.tmp | awk '{if ($5 == 0) print}' | grep "Done"      | wc -l`
         CLEAR=`    cat .joblist.tmp | awk '{if ($5 == 0) print}' | grep "Retrieved" | wc -l`
         TOTAL=`    cat .joblist.tmp | wc -l`
@@ -239,7 +236,7 @@ then
     for TASK in $TASKS
     do
         cat $TASK/status.tmp | grep -E "^[0-9]" | awk '{if ($5 != 0) print}' | grep -v "Submitted\|Scheduled\|Running\|Aborted" | awk '{print $6}' | uniq -c > $TASK/errors.tmp
-        nAborted=`cat $TASK/status.tmp | grep -E "^[0-9]" | awk '{if ($5 != 0) print}' | grep -v "Submitted\|Scheduled\|Running" | grep "Aborted" | wc -l`
+        nAborted=`cat $TASK/status.tmp | grep -E "^[0-9]" | awk '{if (($3 == "Aborted") || ($5 != 0)) print}' | grep -v "Submitted\|Scheduled\|Running" | grep "Aborted" | wc -l`
         if [[ $nAborted != 0 ]]
         then 
             echo "$nAborted Aborted" >> $TASK/errors.tmp
@@ -265,7 +262,7 @@ if [[ $resubmit == "true" ]]
 then
     for TASK in $TASKS
     do
-        cat $TASK/status.tmp | grep -E "^[0-9]" | awk '{if ($5 != 0 || $6 != 0) print}' | grep -v "Submitted\|Scheduled\|Running" > resubmitList.tmp
+        cat $TASK/status.tmp | grep -E "^[0-9]" | awk '{if (($3 == "Aborted") || ($5 != 0)) print}' | grep -v "Submitted\|Scheduled\|Running" > resubmitList.tmp
         if [[ `cat resubmitList.tmp | wc -l` == 0 ]]
         then 
             echo No job to resubmit for $TASK
