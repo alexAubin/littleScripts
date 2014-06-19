@@ -124,9 +124,10 @@ def print_message(
         dirname = os.path.relpath(dirname)
 
     print ansiformat(status[0],status[1].upper()), 
-    if dirname != '':
-        print ansiformat(filePath[0], dirname + os.path.sep), 
-    print ansiformat("_"+filePath[0]+"_", filename), ":", 
+    if (dirname != '' and dirname != './'):
+        print ansiformat(filePath[0], dirname + os.path.sep)+ansiformat("_"+filePath[0]+"_", filename) + ":" + ansiformat(lineNumber[0], lineNumber[1]) + ":", 
+    else :
+        print ansiformat("_"+filePath[0]+"_", filename) + ":" + ansiformat(lineNumber[0], lineNumber[1]) + ":",
     print ansiformat(msg[0], msg[1])
  
 
@@ -135,9 +136,11 @@ def print_message(
 ##################
 
 # Errors
-error_pattern   = re.compile(r"(.+?):([0-9]+?): error: (.+)")
+error_pattern   = re.compile(r"(.+?):([0-9]+?):([0-9]+?): error: (.+)")
+# Link error
+linkError_pattern   = re.compile(r"(.+?):([0-9]+?): undefined reference to (.+)")
 # Warnings
-warning_pattern = re.compile(r"(.+?):([0-9]+?): warning: (.+)")
+warning_pattern = re.compile(r"(.+?):([0-9]+?):([0-9]+?): warning: (.+)")
 # Notes
 note_pattern    = re.compile(r"(.+?): In member function '(.+?)\((.+?)\)':")
 
@@ -184,24 +187,37 @@ Main CLI handler.
 
     for line in sys.stdin:
         error_match = error_pattern.match(line)
+        linkError_match = linkError_pattern.match(line)
         warning_match = warning_pattern.match(line)
         note_match = note_pattern.match(line)
         if error_match:
             errors_present = True
             filePath = error_match.groups()[0]
             lineNumber = error_match.groups()[1]
-            msg = error_match.groups()[2]
+            msg = error_match.groups()[3]
             print_message(
                     (error_status_color, " [error] "),
                     (error_filePath_color, filePath),
                     (lineNumber_color, lineNumber),
                     (message_color, msg),
                     )
+        elif linkError_match:
+            errors_present = True
+            filePath = linkError_match.groups()[0]
+            lineNumber = linkError_match.groups()[1]
+            msg = "Undefined reference to "+linkError_match.groups()[2]
+            print_message(
+                    (error_status_color, " [link error] "),
+                    (error_filePath_color, filePath),
+                    (lineNumber_color, lineNumber),
+                    (message_color, msg),
+                    )
+     
         elif warning_match:
             warnings_present = True
             filePath = warning_match.groups()[0]
             lineNumber = warning_match.groups()[1]
-            msg = warning_match.groups()[2]
+            msg = warning_match.groups()[3]
             print_message(
                     (warning_status_color, "[warning]"),
                     (warning_filePath_color, filePath),
