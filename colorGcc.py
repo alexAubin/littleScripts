@@ -136,7 +136,7 @@ def print_message(
 ##################
 
 # Errors
-error_pattern   = re.compile(r"(.+?):([0-9]+?):([0-9]+?): error: (.+)")
+error_pattern   = re.compile(r"(.+?):([0-9]+?):([0-9]+?): (fatal error|error): (.+)")
 # Link error
 linkError_pattern   = re.compile(r"(.+?):([0-9]+?): undefined reference to (.+)")
 # Warnings
