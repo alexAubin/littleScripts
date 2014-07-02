@@ -194,7 +194,7 @@ Main CLI handler.
             errors_present = True
             filePath = error_match.groups()[0]
             lineNumber = error_match.groups()[1]
-            msg = error_match.groups()[3]
+            msg = error_match.groups()[4]
             print_message(
                     (error_status_color, " [error] "),
                     (error_filePath_color, filePath),
