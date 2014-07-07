@@ -138,7 +138,7 @@ def print_message(
 # Errors
 error_pattern   = re.compile(r"(.+?):([0-9]+?):([0-9]+?): (fatal error|error): (.+)")
 # Link error
-linkError_pattern   = re.compile(r"(.+?):([0-9]+?): undefined reference to (.+)")
+linkError_pattern = re.compile(r"(.+?): in function (.+?)\(\):(.+?):([0-9]+?): error: undefined reference to (.+)")
 # Warnings
 warning_pattern = re.compile(r"(.+?):([0-9]+?):([0-9]+?): warning: (.+)")
 # Notes
@@ -203,9 +203,9 @@ Main CLI handler.
                     )
         elif linkError_match:
             errors_present = True
-            filePath = linkError_match.groups()[0]
-            lineNumber = linkError_match.groups()[1]
-            msg = "Undefined reference to "+linkError_match.groups()[2]
+            filePath = linkError_match.groups()[2]
+            lineNumber = linkError_match.groups()[3]
+            msg = "Undefined reference to "+linkError_match.groups()[4]
             print_message(
                     (error_status_color, " [link error] "),
                     (error_filePath_color, filePath),
