@@ -3,55 +3,108 @@
 LOCAL_PWD=$PWD
 
 CRAB_HOME=/dpm/in2p3.fr/home/cms/phedex/store/user/aaubin/
-CRAB_FOLDER=May14-dileptonFix-v1
+CRAB_FOLDER=
 CRAB_PWD=$CRAB_HOME/$CRAB_FOLDER/
 
-DATASETLIST="DY1jets
-DY2jets
-DY3jets
-DY4jets
-SingleT-s
-SingleT-t
-SingleT-tW
-SingleTbar-s
-SingleTbar-t
-SingleTbar-tW
-TBZ
-TTG
-TTW
-TTWW
-TTZ
-WGToLNu2E
-WGToLNu2Mu
-WGToLNu2Tau
-WWG
-WWTo2L2Nu
-WWW
-WWZ
-WZTo2L2Q
-WZTo3LNu
-WZZ
-ZZTo2L2Nu
-ZZTo2L2Q
-ZZTo4L
-ZZZ
-ttbar-v1
-ttbar-v2
-ttbar_madgraph_1l
-ttbar_madgraph_2l"
+DATASETLIST="DY1JetsToLL_M-50_TuneZ2Star_8TeV-madgraph
+DY2JetsToLL_M-50_TuneZ2Star_8TeV-madgraph
+DY3JetsToLL_M-50_TuneZ2Star_8TeV-madgraph
+DY4JetsToLL_M-50_TuneZ2Star_8TeV-madgraph
+MuEG
+SMS-8TeV-Pythia6Z_T2tt_mStop-150to475_mLSP-1
+SMS-8TeV-Pythia6Z_T2tt_mStop-500to800_mLSP-1
+SMS-T2bw_2J_mStop-100to475_mLSP-0to300_x-025_LeptonFilter_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2bw_2J_mStop-100to475_mLSP-0to300_x-050_LeptonFilter_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2bw_2J_mStop-100to475_mLSP-0to300_x-075_LeptonFilter_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2bw_2J_mStop-100to475_mLSP-0to375_x-025_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2bw_2J_mStop-100to475_mLSP-0to375_x-050_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2bw_2J_mStop-100to475_mLSP-0to375_x-075_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2bw_2J_mStop-100to475_mLSP-1_x-025_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2bw_2J_mStop-100to475_mLSP-1_x-050_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2bw_2J_mStop-100to475_mLSP-1_x-075_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2bw_2J_mStop-500to650_mLSP-150to300_x-025_LeptonFilter_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2bw_2J_mStop-500to650_mLSP-150to300_x-050_LeptonFilter_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2bw_2J_mStop-500to650_mLSP-150to300_x-075_LeptonFilter_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2bw_2J_mStop-500to800_mLSP-0to700_x-025_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2bw_2J_mStop-500to800_mLSP-0to700_x-050_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2bw_2J_mStop-500to800_mLSP-0to700_x-075_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2bw_2J_mStop-500to800_mLSP-1_x-025_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2bw_2J_mStop-500to800_mLSP-1_x-050_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2bw_2J_mStop-500to800_mLSP-1_x-075_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2tt_2J_mStop-100to200_mLSP-1to100_LeptonFilter_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2tt_2J_mStop-150to250_mLSP-1to100_LeptonFilter_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2tt_2J_mStop-225to350_mLSP-25to250_LeptonFilter_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2tt_2J_mStop-265p5to337p5_mLSP-62p5to187p5_LeptonFilter_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2tt_2J_mStop-350to450_mLSP-150to300_LeptonFilter_TuneZ2star_8TeV-madgraph-tauola
+SMS-T2tt_mStop-150to350_mLSP-0to250_8TeV-Pythia6Z
+SMS-T2tt_mStop-375to475_mLSP-0to375_8TeV-Pythia6Z
+SMS-T2tt_mStop-500to650_mLSP-0to225_8TeV-Pythia6Z
+SMS-T2tt_mStop-500to650_mLSP-250to550_8TeV-Pythia6Z
+SMS-T2tt_mStop-675to800_mLSP-0to275_8TeV-Pythia6Z
+SMS-T2tt_mStop-675to800_mLSP-300to700_8TeV-Pythia6Z
+SMS-T2tt_mStop-825to900_mLSP-1_and_mLSP-25to800_8TeV-Pythia6Zstar
+SMS-T2tt_mStop-925to1000_mLSP-1_and_mLSP-25to900_8TeV-Pythia6Zstar
+TBZToLL_4F_TuneZ2star_8TeV-madgraph-tauola
+TTGJets_8TeV-madgraph
+TTJets_DileptDecays_8TeV-sherpa
+TTJets_FullLeptMGDecays_8TeV-madgraph
+TTJets_FullLeptMGDecays_8TeV-madgraph-tauola
+TTJets_HadronicMGDecays_8TeV-madgraph
+TTJets_MSDecays_mass166_5_TuneZ2star_8TeV-madgraph-tauola
+TTJets_MSDecays_mass178_5_TuneZ2star_8TeV-madgraph-tauola
+TTJets_MSDecays_matchingdown_TuneZ2star_8TeV-madgraph-tauola
+TTJets_MSDecays_matchingup_TuneZ2star_8TeV-madgraph-tauola
+TTJets_MSDecays_scaledown_TuneZ2star_8TeV-madgraph-tauola
+TTJets_MSDecays_scaleup_TuneZ2star_8TeV-madgraph-tauola
+TTJets_SemiLeptDecays_8TeV-sherpa
+TTJets_SemiLeptMGDecays_8TeV-madgraph
+TTJets_SemiLeptMGDecays_8TeV-madgraph-tauola
+TTJets_mass166_5_TuneZ2star_8TeV-madgraph-tauola
+TTJets_mass178_5_TuneZ2star_8TeV-madgraph-tauola
+TTJets_matchingdown_TuneZ2star_8TeV-madgraph-tauola
+TTJets_matchingup_TuneZ2star_8TeV-madgraph-tauola
+TTJets_scaledown_TuneZ2star_8TeV-madgraph-tauola
+TTJets_scaleup_TuneZ2star_8TeV-madgraph-tauola
+TTWJets_8TeV-madgraph
+TTWWJets_8TeV-madgraph
+TTZJets_8TeV-madgraph_v2
+TT_8TeV-mcatnlo
+TT_CT10_TuneZ2star_8TeV-powheg-tauola
+T_s-channel_TuneZ2star_8TeV-powheg-tauola
+T_t-channel_TuneZ2star_8TeV-powheg-tauola
+T_tW-channel-DR_TuneZ2star_8TeV-powheg-tauola
+Tbar_s-channel_TuneZ2star_8TeV-powheg-tauola
+Tbar_t-channel_TuneZ2star_8TeV-powheg-tauola
+Tbar_tW-channel-DR_TuneZ2star_8TeV-powheg-tauola
+W1JetsToLNu_TuneZ2Star_8TeV-madgraph
+W2JetsToLNu_TuneZ2Star_8TeV-madgraph
+W3JetsToLNu_TuneZ2Star_8TeV-madgraph
+W4JetsToLNu_TuneZ2Star_8TeV-madgraph
+WGstarToLNu2E_TuneZ2star_8TeV-madgraph-tauola
+WGstarToLNu2Mu_TuneZ2star_7TeV-madgraph-tauola
+WGstarToLNu2Tau_TuneZ2star_7TeV-madgraph-tauola
+WWGJets_8TeV-madgraph
+WWJetsTo2L2Nu_TuneZ2star_8TeV-madgraph-tauola
+WWWJets_8TeV-madgraph
+WWZNoGstarJets_8TeV-madgraph
+WZJetsTo2L2Q_TuneZ2star_8TeV-madgraph-tauola
+WZJetsTo3LNu_TuneZ2_8TeV-madgraph-tauola
+WZZNoGstarJets_8TeV-madgraph
+ZZJetsTo2L2Nu_TuneZ2star_8TeV-madgraph-tauola
+ZZJetsTo2L2Q_TuneZ2star_8TeV-madgraph-tauola
+ZZJetsTo4L_TuneZ2star_8TeV-madgraph-tauola
+ZZZNoGstarJets_8TeV-madgraph"
 
 SIZETOT="0"
 
 for DATASET in $DATASETLIST
 do
 	
-    #SUBFOLD1=`rfdir $CRAB_PWD/$DATASET/ | grep "Beta" | awk '{print $9}'`
-    #SUBFOLD2=`rfdir $CRAB_PWD/$DATASET/$SUBFOLD1 | awk '{print $9}' | head -n1`
+    SUBFOLD1=`rfdir $CRAB_PWD/$DATASET/ | grep "August13-v1" | awk '{print $9}'`
+    SUBFOLD2=`rfdir $CRAB_PWD/$DATASET/$SUBFOLD1 | awk '{print $9}' | head -n1`
    
-    #TAG=`echo $SUBFOLD1 | sed "s|tauVetoValidationBeta_||g"`
-    
-    #SIZE=`rfdir $CRAB_HOME/$DATASET/$SUBFOLD1/$SUBFOLD2 | awk '{print $5}'  | tr '\n' '+' | sed 's|+$|\n|g' | bc | sed 's|^|0.000000000000954*|g' | bc | cut -c1-5`
-    SIZE=`rfdir $CRAB_PWD/$DATASET | awk '{print $5}'  | tr '\n' '+' | sed 's|+$|\n|g' | bc | sed 's|^|0.000000000000954*|g' | bc | cut -c1-5`
+    SIZE=`rfdir $CRAB_HOME/$DATASET/$SUBFOLD1/$SUBFOLD2 | awk '{print $5}'  | tr '\n' '+' | sed 's|+$|\n|g' | bc | sed 's|^|0.000000000000954*|g' | bc | cut -c1-5`
+    #SIZE=`rfdir $CRAB_PWD/$DATASET | awk '{print $5}'  | tr '\n' '+' | sed 's|+$|\n|g' | bc | sed 's|^|0.000000000000954*|g' | bc | cut -c1-5`
 
     if [[ $SIZE != "" ]] 
     then 
@@ -64,5 +117,7 @@ done
 
 echo ""
 echo "Total | $SIZETOT TiB"
+
+
 
 
