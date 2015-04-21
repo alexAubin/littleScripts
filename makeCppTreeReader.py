@@ -35,14 +35,33 @@ for branch in rawListOfBranches :
 #  Print C++ header  #
 ######################
 
+
+print "// ############################################################"
+print "// # Usage                                                    #"
+print "// #                                                          #"
+print "// # - Include this header in your code                       #"
+print "// # - Create an instance of babyEvent, for instance event :  #"
+print "// #      babyEvent event;                                    #"
+print "// # - Open your tree, for example :                          #"
+print "// #      TTree* theTree = f.Get(\"babyTuple\");                #"
+print "// # - Init branches by calling :                             #"
+print "// #      InitializeBranchesForReading(theTree,&event);       #"
+print "// # - To read the i-ish event, call :                        #"
+print "// #      ReadEvent(theTree,i,&event);                        #"
+print "// # - Get the value of your branch by acessing               #"
+print "// #      event.branchName;                                   #"
+print "// ############################################################"
+
+print " "
 print "#ifndef babyFormat"
 print "#define babyFormat"
 
-##########################
-#  Baby event structure  #
-##########################
-
+print ""
+print "// ##########################"
+print "// #  Baby event structure  #"
+print "// ##########################"
 print " "
+
 print "typedef struct"
 print "{"
 
@@ -50,57 +69,58 @@ maxTypeLength = len(max(branchTypes, key=len))
 maxNameLength = len(max(branchNames, key=len))
 
 for name, type in zip(branchNames,branchTypes) :
-    #print "{:>8} {:>8}".format(type, name)
     print "    "+type.ljust(maxTypeLength)+" "+name+";"
 
-print "}"
-print "babyEvent;"
-
-#############################################
-#  Intermediate pointers for special types  #
-#############################################
-
 print " "
-print "typedef struct"
-print "{"
+print "    // Intermediate pointers for special types"
+print "    // Yes, this shit is needed because ROOT is crap."
+print " "
 
 for name, type, isSpecialType in zip(branchNames,branchTypes,branchHasSpecialType) :
     if (not isSpecialType) : continue
     print "    "+(type+"*").ljust(maxTypeLength+1)+" pointerFor"+name+";"
 
 print "}"
-print "babyIntermediatePointers;"
-
-################################
-#  Function to read one event  #
-################################
+print "babyEvent;"
 
 print " "
-print "void ReadEvent(TTree* theTree, long int i, babyIntermediatePointers* pointers, babyEvent* myEvent)"
+print "// #############################"
+print "// #  Branches initialization  #"
+print "// #############################"
+print " "
+
+print "void InitializeBranchesForReading(TTree* theTree, babyEvent* myEvent)"
 print "{"
-print "    theTree->GetEntry(i);"
-print " "
 
 for name, type, isSpecialType in zip(branchNames,branchTypes,branchHasSpecialType) :
-    if (not isSpecialType) : continue
-    print "    myEvent->"+name.ljust(maxNameLength)+" = *(pointers->pointerFor"+name+");"
-print "}"
-
-
-#############################
-#  Branches initialization  #
-#############################
+    if (isSpecialType) :
+        print "    myEvent->pointerFor"+name+" = 0;"
 
 print " "
-print "void InitializeBranchesForReading(TTree* theTree, babyEvent* myEvent,babyIntermediatePointers* pointers)"
-print "{"
-
 for name, type, isSpecialType in zip(branchNames,branchTypes,branchHasSpecialType) :
     if (not isSpecialType) :
         print "    theTree->SetBranchAddress(\""+(name+"\",").ljust(maxNameLength), "&(myEvent->"+name+"));"
     else :
-        print "    pointers->pointerFor"+name+" = 0;"
-        print "    theTree->SetBranchAddress(\""+(name+"\",").ljust(maxNameLength), "&(pointers->pointerFor"+name+"));"
+        print "    theTree->SetBranchAddress(\""+(name+"\",").ljust(maxNameLength), "&(myEvent->pointerFor"+name+"));"
+print "}"
+
+
+print " "
+print "// ################################"
+print "// #  Function to read one event  #"
+print "// ################################"
+print " "
+
+print "void ReadEvent(TTree* theTree, long int i, babyEvent* myEvent)"
+print "{"
+print "    theTree->GetEntry(i);"
+print " "
+
+print "    // Put actual content of special type branches where they should be..."
+for name, type, isSpecialType in zip(branchNames,branchTypes,branchHasSpecialType) :
+    if (not isSpecialType) : continue
+    print "    myEvent->"+name.ljust(maxNameLength)+" = *(myEvent->pointerFor"+name+");"
+
 print "}"
 
 ################
