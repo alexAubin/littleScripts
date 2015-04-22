@@ -6,7 +6,7 @@
 
 case $- in *i*)
     MACHINE_NAME=`hostname -a`
-    N_USERS=`who | awk '{ print $1 }' | sort | uniq | wc -l`
+    N_USERS=`who -u | grep -v old | awk '{ print $1 }' | sort | uniq | wc -l`
     CPU_USAGE=`top -n1 -b | tail -n +8 | awk '{print $9}' | tr "\n" "+" | sed 's|++|\n|g' | bc`
 
     echo " "
