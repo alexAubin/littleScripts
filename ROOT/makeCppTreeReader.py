@@ -1,3 +1,4 @@
+#! /usr/bin/env python2.6
 
 import ROOT as rt
 ROOTtypes = { "F" : "float", "I" : "int", "S" : "short int", "O" : "bool" }
