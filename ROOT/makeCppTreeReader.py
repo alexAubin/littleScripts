@@ -1,17 +1,19 @@
 #! /usr/bin/env python2.6
 
+import sys
 import ROOT as rt
 ROOTtypes = { "F" : "float", "I" : "int", "S" : "short int", "O" : "bool" }
 
+inputFile = sys.argv[1]
+treeName  = sys.argv[2]
 
-
-f = rt.TFile("../../babyTuples_1030/ttbar_madgraph_2l.root")
+f = rt.TFile(inputFile)
 
 ##############################################
 #  Get and parse list of branches from ROOT  #
 ##############################################
 
-rawListOfBranches = f.Get("babyTuple").GetListOfBranches()
+rawListOfBranches = f.Get(treeName).GetListOfBranches()
 branchNames = []
 branchTypes = []
 branchHasSpecialType = []
